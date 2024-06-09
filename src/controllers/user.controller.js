@@ -34,6 +34,11 @@ async function signup(req, res){
 
 async function login(req, res){
     res.send('login working')
+    //extract the user details from the body
+    //find the user from the email
+    //compare the password through bcrypt
+    //generate the jwt token | sign a token
+    //handle all the error handling
 }
 
 async function getUserDetails(req, res){

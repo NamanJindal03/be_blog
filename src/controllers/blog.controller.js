@@ -109,6 +109,71 @@ async function updateBlog(req, res){
 }
 
 async function deleteBlog(req, res){
+    //delete the blog
+    //remove the tags associated with that blog id
 
+    const blogId = req.blog._id;
+    try{
+        const deletedBlog = await Blog.findByIdAndDelete(blogId);
+        deletedBlog.tag.forEach(async (tagEntry)=>{
+            const tagDocument = await Tag.findOne({categoryName: tagEntry});
+            if(tagDocument){
+                tagDocument.category.pull(blogId);
+                await tagDocument.save();
+            }
+        })
+    }
+    catch(err){
+        res.status(500).json({
+            status: false, 
+            message: 'could not update the blog',
+            error: err.message,
+        })
+    }
 }
-module.exports = {createBlog, updateBlog}
+
+async function likeOrUpdateBlog(req, res){
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    const blogId = req.params.blogId;
+    try{
+        const blog = await Blog.findById(blogId);
+        if(blog.votedBy && blog.votedBy.length >0){
+            const isUserPresent = blog.votedBy.find((entry)=> entry == userId);
+            if(isUserPresent){
+                return res.status(400).json({
+                    status: false,
+                    message: 'User has already voted before'
+                })
+            }
+        }
+        
+        if(parseInt(req.params.liking)){
+            blog.upVote = blog.upVote +1;
+            blog.votedBy = [];
+            blog.votedBy = blog.votedBy.push(user._id);
+            console.log(blog.votedBy);
+            await blog.save()
+        }
+        else{
+            blog.downVote = blog.downVote +1;
+            blog.votedBy = [];
+            blog.votedBy = blog.votedBy.push(user._id);
+            await blog.save()
+        }
+        return res.status(200).json({
+            status: true,
+            message: 'Liking succesfully done'
+        })
+    }
+    catch(err){
+        res.status(500).json({
+            status: false, 
+            message: 'could not update the blog',
+            error: err.message,
+        })
+    }
+}
+module.exports = {createBlog, updateBlog, deleteBlog, likeOrUpdateBlog};
+
+// asyncBlock -> 

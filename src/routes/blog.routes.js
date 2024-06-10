@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {createBlog, updateBlog, deleteBlog} = require('../controllers/blog.controller');
+const {createBlog, updateBlog, deleteBlog, likeOrUpdateBlog} = require('../controllers/blog.controller');
 const {verifyAndFetchUser} = require('../middlewares/verifyAndFetchUser');
 const {verifyBlogCreator} = require('../middlewares/verifyBlogCreator')
 
@@ -12,5 +12,8 @@ router.route('/:blogId')
 
 router.route('/:blogId')
     .delete(verifyAndFetchUser, verifyBlogCreator, deleteBlog)
+
+router.route('/:blogId/upvote-downvote/:liking')
+    .post(verifyAndFetchUser, likeOrUpdateBlog)
 
 module.exports = router;

@@ -61,4 +61,8 @@ async function createBlog(req, res){
         })
     }
 }
+
+async function updateBlog(){
+    res.send('work')
+}
 module.exports = {createBlog}

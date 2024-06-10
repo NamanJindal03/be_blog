@@ -62,7 +62,53 @@ async function createBlog(req, res){
     }
 }
 
-async function updateBlog(){
-    res.send('work')
+async function updateBlog(req, res){
+    const {title, description, tag, imageUrl} = req.body;
+    const oldTags = req.blog.tag;
+
+    try{
+        await Blog.findByIdAndUpdate(req.blog._id, {title, description, tag, imageUrl});
+        oldTags.forEach(async (tagEntry)=>{
+            const tagDocument = await Tag.findOne({categoryName: tagEntry});
+            if(tagDocument){
+                tagDocument.category.pull(req.blog._id);
+                await tagDocument.save();
+            }
+        })
+        tag.forEach(async (tagEntry)=>{
+            const tagDocument = await Tag.findOne({categoryName: tagEntry});
+            if(tagDocument){
+                tagDocument.category.push(req.blog._id);
+                await tagDocument.save();
+            }
+            else{
+                const newTag = await Tag.create({categoryName: tagEntry, category: [req.blog._id] })
+            }
+        })
+        return res.status(200).json({
+            status: true, 
+            message: 'Blog updated succesfully',
+        })
+    }
+    catch(err){
+        console.error(err.message);
+        res.status(500).json({
+            status: false, 
+            message: 'could not update the blog',
+            error: err.message,
+        })
+    }
+
+    //update the blog -> with the new data, 
+    //get the newly created blog
+    //compare oldTags and newTags to find delta
+    //remove the blogId from the deletedTags
+    //add the blogId on the newly added tags
+
+    
 }
-module.exports = {createBlog}
+
+async function deleteBlog(req, res){
+
+}
+module.exports = {createBlog, updateBlog}

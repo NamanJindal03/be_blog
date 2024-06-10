@@ -17,11 +17,6 @@ const blogSchema = new mongoose.Schema(
       default: ["General"],
       required: true,
     },
-    title: {
-      type: String,
-      required: true,
-      minLength: 3,
-    },
     imageURL: {
       type: String,
       default: "",

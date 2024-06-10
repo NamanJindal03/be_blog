@@ -1,6 +1,64 @@
 const Blog = require('../models/blog.models');
+const User = require('../models/user.models');
+const Tag = require('../models/tag.models')
 
-function createBlog(req, res){
-    res.send('working')
+async function createBlog(req, res){
+    const userId = req.user._id;
+    const {title, description, tag, imageUrl} = req.body;
+    const documentObject = {}
+    if(tag) documentObject.tag = tag;
+    if(imageUrl) documentObject.imageUrl = imageUrl;
+
+    try{
+        //validating the user from the  userId
+        const user = await User.findById(userId);
+        if(!user){
+            return res.status(400).json({
+                status: false, 
+                message: 'Something went wrong',
+                error: 'Something went wrong',
+            })
+        }
+        //creation of new blog post
+        const newBlogPost = await Blog.create({
+            ...documentObject,
+            title,
+            description,
+            user: user._id,
+            votedBy: [],
+            username: user.username,
+            upVote: 0,
+            downVote: 0,
+            comments: []
+        })
+
+        if(tag?.length > 0){
+            tag.forEach(async (tagValue) => {
+                const existingTag = await Tag.findOne({categoryName: tagValue})
+                if(existingTag){
+                    existingTag.category.push(newBlogPost._id);
+                    await existingTag.save()
+                }
+                const newTag = await Tag.create({categoryName: tagValue, category: [newBlogPost._id] })
+            })
+        }
+        return res.status(200).json({
+            status: true, 
+            message: 'Blog succesfull created',
+            data: newBlogPost
+        })
+        //iterating over the tags
+        //chekc if the tags are present in the db
+        //if they are present append the blog id
+        //if they are not present create and then append blog
+    }
+    catch(err){
+        console.error(err.message);
+        res.status(500).json({
+            status: false, 
+            message: 'could not create the blog',
+            error: err.message,
+        })
+    }
 }
 module.exports = {createBlog}
